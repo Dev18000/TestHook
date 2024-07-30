@@ -17,20 +17,9 @@ httpClientHandler.ServerCertificateCustomValidationCallback = (message, cert, ch
 
 builder.Services.AddHttpClient();
 
-// Add SignalR
-builder.Services.AddSignalR();
-
-// Add CORS configuration
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAllOrigins",
-        builder =>
-        {
-            builder.AllowAnyOrigin()
-                   .AllowAnyMethod()
-                   .AllowAnyHeader();
-        });
-});
+builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
+builder.Services.AddSingleton<IHookService, HookService>();
+builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
@@ -47,11 +36,9 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
-
-app.UseCors("AllowAllOrigins");
 app.MapControllers();
+app.UseRequestLocalization();
 app.MapBlazorHub();
-app.MapHub<PlanningHub>("/planninghub");
 app.MapFallbackToPage("/_Host");
 
 app.Run();
