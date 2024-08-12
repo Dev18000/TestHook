@@ -11,7 +11,6 @@ builder.Services.AddControllers();
 // Add SignalR services
 builder.Services.AddSignalR();
 
-builder.Services.AddScoped<IClientSubscriptionService, ClientSubscriptionService>();
 builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 builder.Services.AddSingleton<IHookService, HookService>();
 
