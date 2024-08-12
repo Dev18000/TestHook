@@ -29,8 +29,8 @@
    
 ## Конфигурация
 
-- URL для подключения к SignalR hub: https://localhost:7006/planninghub.
-- URL для отправки данных веб-хуком: https://localhost:7052/api/TestHook/TestWebHook.
+- URL для подключения к SignalR hub: https://localhost:..../planninghub.
+- URL для отправки данных веб-хуком: https://localhost:..../api/TestHook/TestWebHook.
 
   ## Использование
 
