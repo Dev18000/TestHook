@@ -2,7 +2,14 @@
 
 <p>test</p>
 
-@foreach (var data in MyPropertyTestHook)
+@if (MyPropertyTestHook != null)
 {
-    <div>@data.MyProperty</div>
+    @foreach (var data in MyPropertyTestHook)
+    {
+        <div>@data.MyProperty</div>
+    }
+}
+else
+{
+    <p>No data available</p>
 }

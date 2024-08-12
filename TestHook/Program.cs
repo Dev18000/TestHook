@@ -6,10 +6,14 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
-
 builder.Services.AddControllers();
 
+// Add SignalR services
+builder.Services.AddSignalR();
+
 builder.Services.AddScoped<IClientSubscriptionService, ClientSubscriptionService>();
+builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
+builder.Services.AddSingleton<IHookService, HookService>();
 
 // HTTP client handler for custom certificate validation (if needed)
 var httpClientHandler = new HttpClientHandler();
@@ -17,20 +21,8 @@ httpClientHandler.ServerCertificateCustomValidationCallback = (message, cert, ch
 
 builder.Services.AddHttpClient();
 
-// Add SignalR
-builder.Services.AddSignalR();
-
-// Add CORS configuration
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAllOrigins",
-        builder =>
-        {
-            builder.AllowAnyOrigin()
-                   .AllowAnyMethod()
-                   .AllowAnyHeader();
-        });
-});
+// Add HttpContextAccessor
+builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
@@ -48,10 +40,11 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseCors("AllowAllOrigins");
 app.MapControllers();
+app.UseRequestLocalization();
+
 app.MapBlazorHub();
-app.MapHub<PlanningHub>("/planninghub");
+app.MapHub<UpdateHub>("/updatehub");  // Add SignalR hub mapping
 app.MapFallbackToPage("/_Host");
 
 app.Run();
