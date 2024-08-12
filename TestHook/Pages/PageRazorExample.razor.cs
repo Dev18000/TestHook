@@ -1,45 +1,50 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
-using Newtonsoft.Json;
-using System.Text;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using TestHook.Data;
 using TestHook.Services;
 
 namespace TestHook.Pages
 {
-    public partial class PageRazorExample : IDisposable
+    public partial class PageRazorExample : IAsyncDisposable
     {
-        [Inject]
-        public IHookService HookService { get; set; }
+        private List<SimpleDataForHookTest> updates;
+        private HubConnection hubConnection;
+
         [Inject]
         public ISubscriptionService SubscriptionService { get; set; }
 
+        [Inject]
+        public IHookService HookService { get; set; }
+
         protected override async Task OnInitializedAsync()
         {
-            MyPropertyTestHook = new List<SimpleDataForHookTest>()
-            {
-                new SimpleDataForHookTest(){ MyProperty = 123 }
-            };
+            hubConnection = new HubConnectionBuilder()
+                .WithUrl(Navigation.ToAbsoluteUri("https://localhost:0000/planninghub")) // your hook url adress
+                .Build();
 
-            Console.WriteLine("OnInitializedAsync called");
-            Console.WriteLine($"HookService instance ID: {HookService.GetHashCode()}");
-            await SubscriptionService.Subscribe($"https://localhost:7052/api/TestHook/TestWebHook");
+            hubConnection.On<IEnumerable<SimpleDataForHookTest>>("ReceiveUpdate", (data) =>
+            {
+                updates = data.ToList();
+                InvokeAsync(StateHasChanged);
+            });
+
+            await hubConnection.StartAsync();
+            await hubConnection.SendAsync("Subscribe", "https://localhost:0000/api/TestHook/TestWebHook"); // your blazor adress
+
             HookService.Register(ReceivePlanningData);
-            Console.WriteLine("Handler registered");
         }
 
-       
-
         IEnumerable<SimpleDataForHookTest> MyPropertyTestHook { get; set; }
+
         private void ReceivePlanningData(IEnumerable<SimpleDataForHookTest> planningListDto)
         {
-
-            // i need debug here, for update data from my hook
-            var dataHook = planningListDto;
-            if (dataHook != null && dataHook.Any())
+            if (planningListDto != null && planningListDto.Any())
             {
                 MyPropertyTestHook = planningListDto;
-
                 Console.WriteLine("Received planning data.");
                 InvokeAsync(StateHasChanged);
             }
@@ -49,12 +54,11 @@ namespace TestHook.Pages
             }
         }
 
-        public void Dispose()
+        public async ValueTask DisposeAsync()
         {
-            Console.WriteLine("Dispose called");
+            await hubConnection.SendAsync("Unsubscribe");
             HookService.UnRegister(ReceivePlanningData);
-            SubscriptionService.Unsubscribe($"https://localhost:7052/api/TestHook/TestWebHook").GetAwaiter().GetResult(); // todo find solution send ip dinamic 
-            Console.WriteLine("Handler unregistered and unsubscribed");
+            await hubConnection.DisposeAsync();
         }
     }
 }

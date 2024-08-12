@@ -1,10 +1,9 @@
-﻿
-namespace TestHook.Services
+﻿namespace TestHook.Services
 {
     public class ClientSubscriptionService : IClientSubscriptionService
     {
         private readonly IHttpClientFactory _httpClientFactory;
-        private readonly string _apiUrl = $"https://localhost:7052/api/Event";
+        private readonly string _apiUrl = "https://localhost:0000/api/Event"; // your blazor url adresse
 
         public ClientSubscriptionService(IHttpClientFactory httpClientFactory)
         {
