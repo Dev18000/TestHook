@@ -33,35 +33,37 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        // Initialize the SignalR Hub connection
         hubConnection = new HubConnectionBuilder()
-            .WithUrl(Navigation.ToAbsoluteUri("")) // Ваш URL для хаба
+            .WithUrl(Navigation.ToAbsoluteUri("")) // Your Hub URL
             .Build();
 
-        // Обрабатываем обновления
+        // Handling received updates from the Hub
         hubConnection.On<IEnumerable<SimpleDataForHookTest>>("ReceiveUpdate", (data) =>
-      {
-          if (data != null && data.Any())
-          {
-              updates = data.ToList();
-              InvokeAsync(StateHasChanged);
-          }
-          else
-          {
-              Console.WriteLine("No data received or data is empty");
-          }
-      });
+        {
+            if (data != null && data.Any())
+            {
+                updates = data.ToList();
+                InvokeAsync(StateHasChanged); // Trigger re-rendering when data is received
+            }
+            else
+            {
+                Console.WriteLine("No data received or data is empty");
+            }
+        });
 
-        // Обрабатываем событие закрытия соединения
+        // Handling when the connection is closed and try reconnecting
         hubConnection.Closed += async (error) =>
         {
             isConnected = false;
             Console.WriteLine($"Connection closed. Error: {error?.Message}");
-            await Task.Delay(new Random().Next(0, 5) * 1000); // Подождите перед повторной попыткой подключения
-            await ConnectWithRetryAsync();
+            await Task.Delay(new Random().Next(0, 5) * 1000); // Wait before retrying connection
+            await ConnectWithRetryAsync(); // Retry connecting
         };
 
-        await ConnectWithRetryAsync();
+        await ConnectWithRetryAsync(); // Connect initially when the component initializes
 
+        // Register for data notifications through HookService
         HookService.Register(ReceivePlanningData);
     }
 
@@ -69,12 +71,13 @@ else
     {
         try
         {
+            // Attempt to start the connection
             await hubConnection.StartAsync();
             isConnected = true;
             Console.WriteLine("Connected to the hub.");
 
-            // Отправка запроса на подписку
-            await hubConnection.SendAsync("Subscribe", ""); // URL вебхука
+            // Send a subscription request to the Hub
+            await hubConnection.SendAsync("Subscribe", ""); // Your WebHook URL
         }
         catch (Exception ex)
         {
@@ -83,13 +86,14 @@ else
         }
     }
 
+    // This method is invoked when new data is received from the hook
     private void ReceivePlanningData(IEnumerable<SimpleDataForHookTest> planningListDto)
     {
         if (planningListDto != null && planningListDto.Any())
         {
             updates = planningListDto.ToList();
             Console.WriteLine("Received planning data.");
-            InvokeAsync(StateHasChanged);
+            InvokeAsync(StateHasChanged); // Update the UI with the new data
         }
         else
         {
@@ -97,13 +101,14 @@ else
         }
     }
 
+    // Clean up and disconnect the Hub connection when the component is disposed
     public async ValueTask DisposeAsync()
     {
         if (isConnected)
         {
-            await hubConnection.SendAsync("Unsubscribe");
+            await hubConnection.SendAsync("Unsubscribe"); // Unsubscribe from the Hub
         }
-        HookService.UnRegister(ReceivePlanningData);
-        await hubConnection.DisposeAsync();
+        HookService.UnRegister(ReceivePlanningData); // Unregister the data handler
+        await hubConnection.DisposeAsync(); // Dispose of the Hub connection
     }
 }
