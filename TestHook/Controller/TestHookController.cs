@@ -19,9 +19,8 @@ namespace TestHook.Controller
         [HttpPost("TestWebHook")]
         public IActionResult TestWebHook([FromBody] IEnumerable<SimpleDataForHookTest> planningData)
         {
-            Console.WriteLine($"TestWebHook called with data: {planningData}");
-            Console.WriteLine($"HookService instance ID: {_hookService.GetHashCode()}");
-            _hookService.Notify(planningData);
+            Console.WriteLine($"TestWebHook called with data: {JsonConvert.SerializeObject(planningData)}");
+            _hookService.NotifyAsync(planningData);
             return Ok();
         }
     }

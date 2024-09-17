@@ -1,27 +1,24 @@
-﻿using TestHook.Data;
+﻿using System.Text.Json;
+using TestHook.Data;
+using TestHook.Services;
 
-namespace TestHook.Services
+public class HookService : IHookService
 {
-    public class HookService : IHookService
+    private event Action<IEnumerable<SimpleDataForHookTest>> eventTest;
+
+    public async Task NotifyAsync(IEnumerable<SimpleDataForHookTest> message)
     {
-        private event Action<IEnumerable<SimpleDataForHookTest>> eventTest;
+        eventTest?.Invoke(message);
+    }
 
-        public void Notify(IEnumerable<SimpleDataForHookTest> message)
-        {
-            Console.WriteLine($"Notify called with message: {message}");
-            eventTest?.Invoke(message);
-        }
+    public void Register(Action<IEnumerable<SimpleDataForHookTest>> handler)
+    {
+        Console.WriteLine($"Register called with handler: {handler}");
+        eventTest += handler;
+    }
 
-        public void Register(Action<IEnumerable<SimpleDataForHookTest>> handler)
-        {
-            Console.WriteLine($"Register called with handler: {handler}");
-            eventTest += handler;
-        }
-
-        public void UnRegister(Action<IEnumerable<SimpleDataForHookTest>> handler)
-        {
-            Console.WriteLine($"UnRegister called with handler: {handler}");
-            eventTest -= handler;
-        }
+    public void UnRegister(Action<IEnumerable<SimpleDataForHookTest>> handler)
+    {
+        eventTest -= handler;
     }
 }

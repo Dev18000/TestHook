@@ -6,6 +6,6 @@ namespace TestHook.Services
     {
         void Register(Action<IEnumerable<SimpleDataForHookTest>> handler);
         void UnRegister(Action<IEnumerable<SimpleDataForHookTest>> handler);
-        void Notify(IEnumerable<SimpleDataForHookTest> message);
+        Task NotifyAsync(IEnumerable<SimpleDataForHookTest> message);
     }
 }
