@@ -1,6 +1,6 @@
 ﻿namespace TestHook.Services
 {
-    public interface IClientSubscriptionService
+    public interface ISubscriptionService
     {
         Task Subscribe(string url);
         Task Unsubscribe(string url);

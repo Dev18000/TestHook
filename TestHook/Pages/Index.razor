@@ -1,2 +1,12 @@
 ﻿@page "/"
 
+<button @onclick="SendData">Нажмите, чтоб перейти на страницу для тестов</button>
+
+@code {
+    public void SendData()
+    {
+        Navigation.NavigateTo("/planning");
+        StateHasChanged();
+    }
+}
+

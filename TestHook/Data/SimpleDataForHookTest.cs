@@ -2,6 +2,7 @@
 {
     public class SimpleDataForHookTest
     {
-        public int MyProperty { get; set; }
+        public string Name { get; set; }
+        public int Age { get; set; }
     }
 }

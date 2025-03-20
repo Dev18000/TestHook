@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.SignalR;
 using TestHook.Data;
 using Newtonsoft.Json;
+using TestHook.Services;
 
 namespace TestHook.Controller
 {
@@ -9,38 +10,25 @@ namespace TestHook.Controller
     [ApiController]
     public class TestHookController : ControllerBase
     {
-        private readonly IHubContext<PlanningHub> _hubContext;
+        private readonly IHookService _hookService;
 
-        public TestHookController(IHubContext<PlanningHub> hubContext)
+        public TestHookController(IHookService hookService)
         {
-            _hubContext = hubContext;
+            _hookService = hookService;
         }
 
+        // Webhook endpoint that is triggered by external events and processes the received data.
         [HttpPost("TestWebHook")]
-        public async Task<IActionResult> TestWebHook([FromBody] IEnumerable<SimpleDataForHookTest> planningData)
+        public IActionResult TestWebHook([FromBody] IEnumerable<SimpleDataForHookTest> planningData)
         {
-            var subscribers = PlanningHub.GetSubscribers();
-            Console.WriteLine($"Received TestWebHook call with data: {JsonConvert.SerializeObject(planningData)}");
-            foreach (var subscriber in subscribers)
-            {
-                Console.WriteLine($"Sending data to subscriber: {subscriber}");
-                await _hubContext.Clients.Client(subscriber).SendAsync("ReceivePlanningData", planningData);
-            }
+            // Logs the received data for debugging purposes.
+            Console.WriteLine($"TestWebHook called with data: {JsonConvert.SerializeObject(planningData)}");
+
+            // Notify subscribers asynchronously using the received data.
+            _hookService.NotifyAsync(planningData);
+
+            // Return HTTP 200 OK as a response to confirm the webhook was processed successfully.
             return Ok();
-        }
-
-        [HttpPost("subscribe")]
-        public IActionResult Subscribe([FromBody] SubscriptionRequest request)
-        {
-            Console.WriteLine($"Subscription request received for URL: {request.Url}");
-            return Ok(new { status = "subscribed" });
-        }
-
-        [HttpPost("unsubscribe")]
-        public IActionResult Unsubscribe([FromBody] SubscriptionRequest request)
-        {
-            Console.WriteLine($"Unsubscription request received for URL: {request.Url}");
-            return Ok(new { status = "unsubscribed" });
         }
     }
 }
